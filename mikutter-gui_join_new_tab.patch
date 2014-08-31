@@ -1,0 +1,35 @@
+commit 2d774233d1f4c026a1d7ceb32e920ed0c47815be
+Author: seagetch <sigeth@gmail.com>
+Date:   Tue Jun 10 00:57:47 2014 +0900
+
+    gui_join_new_tabフィルタを導入してみた
+
+diff --git a/core/plugin/gui/tab.rb b/core/plugin/gui/tab.rb
+index 65760c9..6220d49 100644
+--- a/core/plugin/gui/tab.rb
++++ b/core/plugin/gui/tab.rb
+@@ -28,14 +28,22 @@ class Plugin::GUI::Tab
+     super
+     @temporary_tab = false
+     position = Plugin::GUI.get_tab_order(slug)
++    pane = nil
++    index = nil
+     if position
+       window_slug, pane_slug, order = position
+       pane = Plugin::GUI::Pane.instance(pane_slug)
+       index = where_should_insert_it(slug, pane.children.map(&:slug), order)
+       notice "tab initialize #{slug} #{position.inspect} #{index}"
+-      pane.add_child(self, index)
+     else
+-      Plugin::GUI::Pane.add_default << self
++      pane = Plugin::GUI::Pane.add_default
++    end
++    pane, tab, index = Plugin.filtering(:gui_join_new_tab, pane, self, index)
++
++    if index
++      pane.add_child(tab, index)
++    else
++      pane.add_child(tab)
+     end
+     @tab_toolbar = Plugin::GUI::TabToolbar.instance
+     Plugin.call(:tab_created, self)
